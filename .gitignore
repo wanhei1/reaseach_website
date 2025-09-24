@@ -29,6 +29,7 @@ next-env.d.ts
 # test files
 test-supabase.js
 
-# lock files (specific exclusions)
+# lock files (exclude other package managers, keep bun.lock)
 package-lock.json
-bun.lock
+yarn.lock
+pnpm-lock.yaml
