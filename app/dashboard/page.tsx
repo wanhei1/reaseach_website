@@ -1,11 +1,11 @@
 import { Header } from "@/components/header"
-import { DataDashboard } from "@/components/data-dashboard"
+import { RealDataDashboard } from "@/components/real-data-dashboard"
 
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <DataDashboard />
+      <RealDataDashboard />
     </div>
   )
 }

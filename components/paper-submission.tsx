@@ -8,8 +8,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Upload, FileText, AlertCircle } from "lucide-react"
+import { Upload, FileText, AlertCircle, CheckCircle } from "lucide-react"
 import { useState } from "react"
+import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 
 export function PaperSubmission() {
   const [formData, setFormData] = useState({
@@ -40,6 +42,12 @@ export function PaperSubmission() {
     privacy: false,
   })
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
+  const [errorMessage, setErrorMessage] = useState("")
+  const router = useRouter()
+  const supabase = createClient()
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
@@ -48,10 +56,84 @@ export function PaperSubmission() {
     setFiles((prev) => ({ ...prev, [field]: file }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log("Form submitted:", { formData, files, agreements })
+    setIsSubmitting(true)
+    setSubmitStatus("idle")
+    setErrorMessage("")
+
+    try {
+      // 验证必填字段
+      const requiredFields = ['title', 'author', 'studentId', 'supervisor', 'department', 'major', 'degree', 'abstract']
+      const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData])
+      
+      if (missingFields.length > 0) {
+        throw new Error(`请填写必填字段: ${missingFields.join(', ')}`)
+      }
+
+      // 验证协议勾选
+      if (!agreements.copyright || !agreements.authenticity || !agreements.privacy) {
+        throw new Error("请勾选所有必需的协议")
+      }
+
+      // 验证文件上传
+      if (!files.fullText) {
+        throw new Error("请上传论文全文")
+      }
+
+      // 获取当前用户
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) {
+        throw new Error("请先登录")
+      }
+
+      // 上传文件到Supabase Storage
+      const uploadedFiles: { [key: string]: string } = {}
+      
+      for (const [key, file] of Object.entries(files)) {
+        if (file) {
+          const fileExt = file.name.split('.').pop()
+          const fileName = `${user.id}/${key}_${Date.now()}.${fileExt}`
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('papers')
+            .upload(fileName, file)
+
+          if (uploadError) throw uploadError
+          uploadedFiles[key] = uploadData.path
+        }
+      }
+
+      // 保存论文数据到数据库
+      const { data, error } = await supabase
+        .from('papers')
+        .insert({
+          ...formData,
+          user_id: user.id,
+          file_paths: uploadedFiles,
+          agreements: agreements,
+          submitted_at: new Date().toISOString(),
+          status: 'pending'
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setSubmitStatus("success")
+      
+      // 3秒后跳转到论文管理页面
+      setTimeout(() => {
+        router.push('/papers')
+      }, 3000)
+
+    } catch (error) {
+      console.error('提交失败:', error)
+      setSubmitStatus("error")
+      setErrorMessage(error instanceof Error ? error.message : "提交失败，请稍后重试")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -362,6 +444,29 @@ export function PaperSubmission() {
           </CardContent>
         </Card>
 
+        {/* 状态显示 */}
+        {submitStatus === "success" && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center space-x-2 text-green-800">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-medium">提交成功！</span>
+            </div>
+            <p className="mt-2 text-sm text-green-700">
+              您的论文已成功提交，正在审核中。3秒后将跳转到论文管理页面...
+            </p>
+          </div>
+        )}
+
+        {submitStatus === "error" && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center space-x-2 text-red-800">
+              <AlertCircle className="w-5 h-5" />
+              <span className="font-medium">提交失败</span>
+            </div>
+            <p className="mt-2 text-sm text-red-700">{errorMessage}</p>
+          </div>
+        )}
+
         {/* 提交按钮 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -369,15 +474,20 @@ export function PaperSubmission() {
             <span>请确保所有必填信息已完整填写</span>
           </div>
           <div className="space-x-4">
-            <Button type="button" variant="outline">
+            <Button type="button" variant="outline" disabled={isSubmitting}>
               保存草稿
             </Button>
             <Button
               type="submit"
               className="bg-blue-600 hover:bg-blue-700"
-              disabled={!agreements.copyright || !agreements.authenticity || !agreements.privacy}
+              disabled={
+                isSubmitting || 
+                !agreements.copyright || 
+                !agreements.authenticity || 
+                !agreements.privacy
+              }
             >
-              提交论文
+              {isSubmitting ? "提交中..." : "提交论文"}
             </Button>
           </div>
         </div>

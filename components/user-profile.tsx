@@ -5,23 +5,83 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { User, Mail, Phone, Building, Edit, Save, Key, FileText, Calendar } from "lucide-react"
-import { useState } from "react"
+import { User, Mail, Phone, Building, Edit, Save, Key, FileText, Calendar, CheckCircle, AlertCircle } from "lucide-react"
+import { useState, useEffect } from "react"
+import { createClient } from "@/lib/supabase/client"
 
 export function UserProfile() {
   const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle")
   const [userInfo, setUserInfo] = useState({
-    username: "zhangsan",
-    fullName: "张三",
-    email: "zhangsan@bit.edu.cn",
-    phone: "13800138000",
-    studentId: "2021001",
-    department: "计算机学院",
-    major: "计算机科学与技术",
+    username: "",
+    fullName: "",
+    email: "",
+    phone: "",
+    studentId: "",
+    department: "",
+    major: "",
     userType: "学生",
-    joinDate: "2021-09-01",
-    lastLogin: "2023-12-15 14:30:00",
+    joinDate: "",
+    lastLogin: "",
   })
+  const [isLoading, setIsLoading] = useState(true)
+  const supabase = createClient()
+
+  // 获取用户信息
+  useEffect(() => {
+    async function fetchUserProfile() {
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) {
+          console.error('用户未登录')
+          return
+        }
+
+        // 尝试从profiles表获取用户信息
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        if (profile) {
+          setUserInfo({
+            username: profile.username || '',
+            fullName: profile.full_name || '',
+            email: user.email || '',
+            phone: profile.phone || '',
+            studentId: profile.student_id || '',
+            department: profile.department || '',
+            major: profile.major || '',
+            userType: profile.user_type || '学生',
+            joinDate: user.created_at ? new Date(user.created_at).toLocaleDateString() : '',
+            lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : '',
+          })
+        } else {
+          // 如果没有profile记录，使用基本的用户信息
+          setUserInfo({
+            username: user.email?.split('@')[0] || '',
+            fullName: user.user_metadata?.full_name || '',
+            email: user.email || '',
+            phone: '',
+            studentId: '',
+            department: '',
+            major: '',
+            userType: '学生',
+            joinDate: user.created_at ? new Date(user.created_at).toLocaleDateString() : '',
+            lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : '',
+          })
+        }
+      } catch (error) {
+        console.error('获取用户信息失败:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUserProfile()
+  }, [])
 
   const userPapers = [
     {
@@ -47,10 +107,47 @@ export function UserProfile() {
     { date: "2023-12-01", action: "登录系统", description: "首次登录学位论文管理系统" },
   ]
 
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving user info:", userInfo)
-    setIsEditing(false)
+  const handleSave = async () => {
+    setIsSaving(true)
+    setSaveStatus("idle")
+
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) {
+        throw new Error('用户未登录')
+      }
+
+      // 更新或插入用户资料
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          username: userInfo.username,
+          full_name: userInfo.fullName,
+          phone: userInfo.phone,
+          student_id: userInfo.studentId,
+          department: userInfo.department,
+          major: userInfo.major,
+          user_type: userInfo.userType,
+          updated_at: new Date().toISOString()
+        })
+
+      if (error) throw error
+
+      setSaveStatus("success")
+      setIsEditing(false)
+      
+      // 3秒后隐藏成功消息
+      setTimeout(() => {
+        setSaveStatus("idle")
+      }, 3000)
+
+    } catch (error) {
+      console.error('保存失败:', error)
+      setSaveStatus("error")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -88,13 +185,53 @@ export function UserProfile() {
                   <User className="w-5 h-5 mr-2" />
                   个人信息
                 </span>
-                <Button size="sm" variant="outline" onClick={() => (isEditing ? handleSave() : setIsEditing(true))}>
-                  {isEditing ? <Save className="w-4 h-4 mr-2" /> : <Edit className="w-4 h-4 mr-2" />}
-                  {isEditing ? "保存" : "编辑"}
-                </Button>
+                {isEditing ? (
+                  <div className="flex space-x-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => setIsEditing(false)}
+                      disabled={isSaving}
+                    >
+                      取消
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={handleSave}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? (
+                        <>
+                          <div className="w-4 h-4 mr-2 animate-spin border-2 border-white border-t-transparent rounded-full" />
+                          保存中...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          保存
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    编辑
+                  </Button>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {saveStatus === "success" && (
+                <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                  ✅ 保存成功！
+                </div>
+              )}
+              {saveStatus === "error" && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                  ❌ 保存失败，请重试
+                </div>
+              )}
               <div className="text-center mb-6">
                 <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <span className="text-white font-bold text-2xl">{userInfo.fullName.charAt(0)}</span>

@@ -6,11 +6,23 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon, Search } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
-export function AdvancedSearch() {
+interface AdvancedSearchProps {
+  initialQuery?: string
+  initialType?: string
+}
+
+export function AdvancedSearch({ initialQuery = "", initialType = "all" }: AdvancedSearchProps) {
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
+  const [searchQuery, setSearchQuery] = useState(initialQuery)
+  const [searchType, setSearchType] = useState(initialType)
+
+  useEffect(() => {
+    setSearchQuery(initialQuery)
+    setSearchType(initialType)
+  }, [initialQuery, initialType])
 
   return (
     <div className="bg-gradient-to-r from-blue-500 to-blue-600 py-8">

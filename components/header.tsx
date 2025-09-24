@@ -2,18 +2,82 @@
 import { Button } from "@/components/ui/button"
 import { User, LogOut } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { createClient } from "@/lib/supabase/client"
 
 export function Header() {
-  // Mock authentication state - in real app this would come from context/state management
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [user, setUser] = useState({ name: "张三", type: "学生" })
+  const [user, setUser] = useState<{ name: string; type: string } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
-  const handleLogout = () => {
-    setIsAuthenticated(false)
-    setUser({ name: "", type: "" })
-    // Redirect to home page
-    window.location.href = "/"
+  useEffect(() => {
+    // 获取当前用户状态
+    const getUser = async () => {
+      try {
+        const { data: { user: authUser }, error } = await supabase.auth.getUser()
+        
+        if (error || !authUser) {
+          setIsAuthenticated(false)
+          setUser(null)
+        } else {
+          setIsAuthenticated(true)
+          
+          // 尝试从profiles表获取用户信息
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, full_name, user_type')
+            .eq('id', authUser.id)
+            .single()
+
+          if (profile) {
+            setUser({
+              name: profile.full_name || profile.username || authUser.email?.split('@')[0] || '用户',
+              type: profile.user_type || '用户'
+            })
+          } else {
+            // 如果没有profile，使用auth用户基本信息
+            setUser({
+              name: authUser.email?.split('@')[0] || '用户',
+              type: '用户'
+            })
+          }
+        }
+      } catch (error) {
+        console.error('获取用户信息失败:', error)
+        setIsAuthenticated(false)
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    getUser()
+
+    // 监听认证状态变化
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        setIsAuthenticated(false)
+        setUser(null)
+      } else if (event === 'SIGNED_IN' && session) {
+        getUser() // 重新获取用户信息
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut()
+      setIsAuthenticated(false)
+      setUser(null)
+      window.location.href = "/"
+    } catch (error) {
+      console.error('退出失败:', error)
+    }
   }
 
   return (
@@ -42,9 +106,9 @@ export function Header() {
             <Link href="/papers/submit" className="text-gray-700 hover:text-blue-600 font-medium">
               论文提交
             </Link>
-            <a href="#" className="text-gray-700 hover:text-blue-600 font-medium">
+            <Link href="/departments" className="text-gray-700 hover:text-blue-600 font-medium">
               院系专业导航
-            </a>
+            </Link>
             <Link href="/search" className="text-gray-700 hover:text-blue-600 font-medium">
               高级检索
             </Link>
@@ -63,7 +127,9 @@ export function Header() {
           </nav>
 
           <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
+            {loading ? (
+              <div className="w-8 h-8 animate-spin border-2 border-blue-600 border-t-transparent rounded-full"></div>
+            ) : isAuthenticated && user ? (
               <div className="flex items-center space-x-3">
                 <Link href="/profile">
                   <Button

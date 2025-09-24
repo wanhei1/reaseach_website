@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { FileText, TrendingUp, Download, Users } from "lucide-react"
+import Link from "next/link"
 
 export function MainContent() {
   return (
@@ -18,21 +19,21 @@ export function MainContent() {
           <CardContent className="space-y-3">
             <div className="flex items-start space-x-2">
               <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-              <a href="#" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed">
+              <Link href="/announcements/submission-guidelines" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed">
                 电子学位论文提交注意事项
-              </a>
+              </Link>
             </div>
             <div className="flex items-start space-x-2">
               <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-              <a href="#" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed">
+              <Link href="/help/faq" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed">
                 常见问题解答
-              </a>
+              </Link>
             </div>
             <div className="flex items-start space-x-2">
               <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-              <a href="#" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed">
+              <Link href="/announcements/revocation-policy" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed">
                 已审论文延行撤销处理的相关规定
-              </a>
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -49,27 +50,27 @@ export function MainContent() {
           <CardContent className="space-y-3">
             <div className="flex items-start space-x-3">
               <span className="text-sm font-semibold text-orange-500 bg-orange-100 px-2 py-1 rounded">1</span>
-              <a href="#" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed flex-1">
+              <Link href="/papers/1" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed flex-1">
                 高速动能弹高速度侵彻混凝土数值模拟...
-              </a>
+              </Link>
             </div>
             <div className="flex items-start space-x-3">
               <span className="text-sm font-semibold text-orange-500 bg-orange-100 px-2 py-1 rounded">2</span>
-              <a href="#" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed flex-1">
+              <Link href="/papers/2" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed flex-1">
                 玻璃纤维增强混凝土气凝胶力学性能及...
-              </a>
+              </Link>
             </div>
             <div className="flex items-start space-x-3">
               <span className="text-sm font-semibold text-orange-500 bg-orange-100 px-2 py-1 rounded">3</span>
-              <a href="#" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed flex-1">
+              <Link href="/papers/3" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed flex-1">
                 星载主动雷达高度计信号处理技术研...
-              </a>
+              </Link>
             </div>
             <div className="flex items-start space-x-3">
               <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">4</span>
-              <a href="#" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed flex-1">
+              <Link href="/papers/4" className="text-sm text-gray-700 hover:text-blue-600 leading-relaxed flex-1">
                 基于卷积神经网络的单目标跟踪算法
-              </a>
+              </Link>
             </div>
           </CardContent>
         </Card>

@@ -5,60 +5,133 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, Plus, FileText, Clock, CheckCircle, XCircle, Download, Eye, Edit, Trash2 } from "lucide-react"
+import { Search, Plus, FileText, Clock, CheckCircle, XCircle, Download, Eye, Edit, Trash2, AlertTriangle } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { createClient } from "@/lib/supabase/client"
+
+interface Paper {
+  id: string
+  title: string
+  author: string
+  advisor: string | null
+  department: string | null
+  major: string | null
+  degree_type: string | null
+  defense_date: string | null
+  abstract: string | null
+  keywords: string[] | null
+  file_url: string | null
+  file_name: string | null
+  file_size: number | null
+  status: string
+  submitted_by: string
+  created_at: string
+  updated_at: string
+}
 
 export function PaperManagement() {
   const [activeTab, setActiveTab] = useState("all")
+  const [papers, setPapers] = useState<Paper[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [departmentFilter, setDepartmentFilter] = useState("all")
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const supabase = createClient()
 
-  const papers = [
-    {
-      id: "1",
-      title: "基于深度学习的图像识别算法研究",
-      author: "张三",
-      studentId: "2021001",
-      supervisor: "王教授",
-      department: "计算机学院",
-      major: "计算机科学与技术",
-      degree: "硕士",
-      status: "已通过",
-      submissionDate: "2023-12-01",
-      defenseDate: "2023-12-15",
-      keywords: ["深度学习", "图像识别", "卷积神经网络"],
-      abstract: "本文研究了基于深度学习的图像识别算法，提出了一种新的卷积神经网络结构...",
-    },
-    {
-      id: "2",
-      title: "5G通信系统中的信号处理技术研究",
-      author: "李四",
-      studentId: "2021002",
-      supervisor: "李教授",
-      department: "信息与电子学院",
-      major: "通信工程",
-      degree: "博士",
-      status: "审核中",
-      submissionDate: "2023-11-20",
-      defenseDate: "2024-01-10",
-      keywords: ["5G通信", "信号处理", "MIMO技术"],
-      abstract: "本文针对5G通信系统中的信号处理技术进行了深入研究，重点分析了MIMO技术...",
-    },
-    {
-      id: "3",
-      title: "智能制造系统中的机器人控制算法",
-      author: "王五",
-      studentId: "2021003",
-      supervisor: "张教授",
-      department: "机械与车辆学院",
-      major: "机械工程",
-      degree: "硕士",
-      status: "待修改",
-      submissionDate: "2023-11-15",
-      defenseDate: "2023-12-20",
-      keywords: ["智能制造", "机器人控制", "自动化"],
-      abstract: "本文研究了智能制造系统中的机器人控制算法，提出了一种基于强化学习的控制方法...",
-    },
-  ]
+  useEffect(() => {
+    fetchPapers()
+  }, [])
+
+  const fetchPapers = async () => {
+    try {
+      setLoading(true)
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        console.error('用户未登录')
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('papers')
+        .select('*')
+        .eq('submitted_by', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('获取论文失败:', error)
+      } else {
+        setPapers(data || [])
+      }
+    } catch (error) {
+      console.error('获取论文失败:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (paperId: string) => {
+    if (!deleteConfirm) {
+      setDeleteConfirm(paperId)
+      return
+    }
+
+    try {
+      setActionLoading(paperId)
+      
+      // 首先获取论文信息以删除文件
+      const paper = papers.find(p => p.id === paperId)
+      if (paper?.file_url) {
+        // 从URL中提取文件路径
+        const filePath = paper.file_url.split('/').pop()
+        if (filePath) {
+          await supabase.storage
+            .from('papers')
+            .remove([filePath])
+        }
+      }
+
+      // 删除数据库记录
+      const { error } = await supabase
+        .from('papers')
+        .delete()
+        .eq('id', paperId)
+
+      if (error) throw error
+
+      // 更新本地状态
+      setPapers(papers.filter(p => p.id !== paperId))
+      setDeleteConfirm(null)
+      
+    } catch (error) {
+      console.error('删除论文失败:', error)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleDownload = async (paper: Paper) => {
+    if (!paper.file_url) return
+    
+    try {
+      setActionLoading(paper.id)
+      
+      // 创建下载链接
+      const link = document.createElement('a')
+      link.href = paper.file_url
+      link.download = paper.file_name || '论文.pdf'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+    } catch (error) {
+      console.error('下载失败:', error)
+    } finally {
+      setActionLoading(null)
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -87,12 +160,43 @@ export function PaperManagement() {
   }
 
   const filteredPapers = papers.filter((paper) => {
-    if (activeTab === "all") return true
-    if (activeTab === "approved") return paper.status === "已通过"
-    if (activeTab === "pending") return paper.status === "审核中"
-    if (activeTab === "revision") return paper.status === "待修改"
-    return true
+    // 按状态筛选
+    let statusMatch = true
+    if (activeTab === "approved") statusMatch = paper.status === "approved"
+    else if (activeTab === "pending") statusMatch = paper.status === "pending"
+    else if (activeTab === "revision") statusMatch = paper.status === "rejected"
+
+    // 按搜索词筛选
+    let searchMatch = true
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase()
+      searchMatch = paper.title.toLowerCase().includes(searchLower) ||
+                   paper.author.toLowerCase().includes(searchLower) ||
+                   (paper.keywords && paper.keywords.some(k => k.toLowerCase().includes(searchLower))) ||
+                   false
+    }
+
+    // 按院系筛选
+    let deptMatch = true
+    if (departmentFilter !== "all") {
+      deptMatch = paper.department === departmentFilter
+    }
+
+    return statusMatch && searchMatch && deptMatch
   })
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('zh-CN')
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "approved": return "已通过"
+      case "pending": return "审核中"
+      case "rejected": return "待修改"
+      default: return "待审核"
+    }
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -121,21 +225,21 @@ export function PaperManagement() {
         <Card>
           <CardContent className="p-6 text-center">
             <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-900">{papers.filter((p) => p.status === "已通过").length}</div>
+            <div className="text-2xl font-bold text-gray-900">{papers.filter((p) => p.status === "approved").length}</div>
             <div className="text-sm text-gray-600">已通过</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
             <Clock className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-900">{papers.filter((p) => p.status === "审核中").length}</div>
+            <div className="text-2xl font-bold text-gray-900">{papers.filter((p) => p.status === "pending").length}</div>
             <div className="text-sm text-gray-600">审核中</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
             <XCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-900">{papers.filter((p) => p.status === "待修改").length}</div>
+            <div className="text-2xl font-bold text-gray-900">{papers.filter((p) => p.status === "rejected").length}</div>
             <div className="text-sm text-gray-600">待修改</div>
           </CardContent>
         </Card>
@@ -146,20 +250,33 @@ export function PaperManagement() {
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="md:col-span-2">
-              <Input placeholder="搜索论文标题、作者或关键词..." className="w-full" />
+              <Input 
+                placeholder="搜索论文标题、作者或关键词..." 
+                className="w-full"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <Select>
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="选择院系" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部院系</SelectItem>
-                <SelectItem value="cs">计算机学院</SelectItem>
-                <SelectItem value="ee">信息与电子学院</SelectItem>
-                <SelectItem value="me">机械与车辆学院</SelectItem>
+                <SelectItem value="计算机学院">计算机学院</SelectItem>
+                <SelectItem value="信息与电子学院">信息与电子学院</SelectItem>
+                <SelectItem value="机械与车辆学院">机械与车辆学院</SelectItem>
+                <SelectItem value="材料学院">材料学院</SelectItem>
+                <SelectItem value="光电学院">光电学院</SelectItem>
+                <SelectItem value="自动化学院">自动化学院</SelectItem>
               </SelectContent>
             </Select>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => {
+                // 搜索功能已通过实时筛选实现
+              }}
+            >
               <Search className="w-4 h-4 mr-2" />
               搜索
             </Button>
@@ -196,52 +313,50 @@ export function PaperManagement() {
                                 </h3>
                               </Link>
 
-                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-3 text-sm text-gray-600">
+                              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-3 text-sm text-gray-600">
                                 <div>
                                   <span className="font-medium">作者：</span>
                                   {paper.author}
                                 </div>
                                 <div>
-                                  <span className="font-medium">学号：</span>
-                                  {paper.studentId}
-                                </div>
-                                <div>
                                   <span className="font-medium">导师：</span>
-                                  {paper.supervisor}
+                                  {paper.advisor || '未指定'}
                                 </div>
                                 <div>
                                   <span className="font-medium">学位：</span>
-                                  {paper.degree}
+                                  {paper.degree_type || '未指定'}
                                 </div>
                               </div>
 
                               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-3 text-sm text-gray-600">
                                 <div>
                                   <span className="font-medium">院系：</span>
-                                  {paper.department}
+                                  {paper.department || '未指定'}
                                 </div>
                                 <div>
                                   <span className="font-medium">专业：</span>
-                                  {paper.major}
+                                  {paper.major || '未指定'}
                                 </div>
                                 <div>
                                   <span className="font-medium">提交日期：</span>
-                                  {paper.submissionDate}
+                                  {formatDate(paper.created_at)}
                                 </div>
                               </div>
 
-                              <div className="mb-3">
-                                <span className="text-sm font-medium text-gray-600">关键词：</span>
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                  {paper.keywords.map((keyword, index) => (
-                                    <Badge key={index} variant="secondary" className="text-xs">
-                                      {keyword}
-                                    </Badge>
-                                  ))}
+                              {paper.keywords && paper.keywords.length > 0 && (
+                                <div className="mb-3">
+                                  <span className="text-sm font-medium text-gray-600">关键词：</span>
+                                  <div className="flex flex-wrap gap-2 mt-1">
+                                    {paper.keywords.map((keyword, index) => (
+                                      <Badge key={index} variant="secondary" className="text-xs">
+                                        {keyword}
+                                      </Badge>
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
+                              )}
 
-                              <p className="text-sm text-gray-700 line-clamp-2">{paper.abstract}</p>
+                              <p className="text-sm text-gray-700 line-clamp-2">{paper.abstract || '暂无摘要'}</p>
                             </div>
                           </div>
                         </div>
@@ -249,29 +364,51 @@ export function PaperManagement() {
                         <div className="flex flex-col items-end space-y-3 ml-6">
                           <Badge className={`${getStatusColor(paper.status)} flex items-center space-x-1`}>
                             {getStatusIcon(paper.status)}
-                            <span>{paper.status}</span>
+                            <span>{getStatusText(paper.status)}</span>
                           </Badge>
 
                           <div className="flex space-x-2">
-                            <Button size="sm" variant="outline">
-                              <Eye className="w-4 h-4 mr-1" />
-                              查看
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Download className="w-4 h-4 mr-1" />
-                              下载
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Edit className="w-4 h-4 mr-1" />
-                              编辑
-                            </Button>
+                            <Link href={`/papers/${paper.id}`}>
+                              <Button size="sm" variant="outline">
+                                <Eye className="w-4 h-4 mr-1" />
+                                查看
+                              </Button>
+                            </Link>
+                            {paper.file_url && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleDownload(paper)}
+                                disabled={actionLoading === paper.id}
+                              >
+                                <Download className="w-4 h-4 mr-1" />
+                                下载
+                              </Button>
+                            )}
+                            <Link href={`/papers/edit/${paper.id}`}>
+                              <Button size="sm" variant="outline">
+                                <Edit className="w-4 h-4 mr-1" />
+                                编辑
+                              </Button>
+                            </Link>
                             <Button
                               size="sm"
                               variant="outline"
                               className="text-red-600 hover:text-red-700 bg-transparent"
+                              onClick={() => handleDelete(paper.id)}
+                              disabled={actionLoading === paper.id}
                             >
-                              <Trash2 className="w-4 h-4 mr-1" />
-                              删除
+                              {deleteConfirm === paper.id ? (
+                                <>
+                                  <AlertTriangle className="w-4 h-4 mr-1" />
+                                  确认删除
+                                </>
+                              ) : (
+                                <>
+                                  <Trash2 className="w-4 h-4 mr-1" />
+                                  删除
+                                </>
+                              )}
                             </Button>
                           </div>
                         </div>
@@ -281,12 +418,27 @@ export function PaperManagement() {
                 ))}
               </div>
 
-              {filteredPapers.length === 0 && (
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="w-8 h-8 animate-spin border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="text-gray-500">加载论文数据中...</p>
+                </div>
+              ) : filteredPapers.length === 0 ? (
                 <div className="text-center py-12">
                   <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">暂无论文数据</p>
+                  <p className="text-gray-500">
+                    {searchTerm || departmentFilter !== "all" ? "没有找到匹配的论文" : "暂无论文数据"}
+                  </p>
+                  {(!searchTerm && departmentFilter === "all") && (
+                    <Link href="/papers/submit">
+                      <Button className="mt-4 bg-blue-600 hover:bg-blue-700">
+                        <Plus className="w-4 h-4 mr-2" />
+                        提交第一篇论文
+                      </Button>
+                    </Link>
+                  )}
                 </div>
-              )}
+              ) : null}
             </TabsContent>
           </Tabs>
         </CardContent>
