@@ -28,6 +28,10 @@ next-env.d.ts
 
 # test files
 test-supabase.js
+check-db.js
+execute-scripts.js
+verify-database.js
+SUPABASE_EXECUTION_GUIDE.md
 
 # lock files (exclude other package managers, keep bun.lock)
 package-lock.json

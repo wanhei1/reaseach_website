@@ -1,5 +1,5 @@
--- 学者表已在007_unified_database_setup.sql中创建
--- 这里只插入数据
+-- 插入学者和学科数据（配合007_unified_database_setup.sql使用）
+-- 注意：需要先执行007_unified_database_setup.sql创建表结构
 
 -- 插入北京理工大学的测试学者数据
 INSERT INTO public.scholars (name, title, department, research_areas, paper_count, citation_count, h_index, avatar_url, email, bio) VALUES
@@ -13,9 +13,6 @@ INSERT INTO public.scholars (name, title, department, research_areas, paper_coun
 ('孙博士', '副教授', '化学与化工学院', ARRAY['化学工程', '催化技术', '绿色化学'], 26, 580, 11, '/diverse-professor-lecturing.png', 'sundr@bit.edu.cn', '化学工程专家，专注于绿色化学和催化技术研究。'),
 ('黄院长', '教授', '管理与经济学院', ARRAY['管理科学', '运筹学', '决策分析'], 89, 3200, 32, '/diverse-professor-lecturing.png', 'huangdean@bit.edu.cn', '管理科学领域的杰出学者，在企业运营管理和决策优化方面有深厚造诣。'),
 ('郑教授', '教授', '光电学院', ARRAY['光学工程', '激光技术', '光电器件'], 52, 1890, 21, '/diverse-professor-lecturing.png', 'zhengprof@bit.edu.cn', '光学工程专家，在激光技术和光电器件设计方面有重要贡献。');
-
--- 学科分类表已在007_unified_database_setup.sql中创建
--- 这里只插入数据
 
 -- 插入学科分类数据
 INSERT INTO public.subjects (code, name, description, paper_count) VALUES
@@ -37,38 +34,19 @@ INSERT INTO public.subjects (code, name, description, paper_count) VALUES
 -- 为papers表添加更多测试数据（使用统一表结构）
 INSERT INTO public.papers (title, author, department, status, submission_date, keywords, keywords_array, abstract, supervisor, degree_type) VALUES
 ('基于深度学习的自然语言处理技术研究', '张明', '计算机学院', 'published', '2023-11-15', 'BERT,自然语言处理,深度学习,机器翻译', ARRAY['BERT', '自然语言处理', '深度学习', '机器翻译'], '本文研究了基于深度学习的自然语言处理技术，提出了一种改进的BERT模型。通过在多个NLP任务上的实验验证，证明了所提方法的有效性。研究成果对推动自然语言处理技术的发展具有重要意义。', '王博', '硕士'),
-('5G通信系统中的大规模MIMO技术优化', '李华', '信息与电子学院', 'published', '2023-10-20', '5G,大规模MIMO,信号处理,无线通信', '针对5G通信系统中大规模MIMO技术的优化问题，本文提出了一种新的预编码算法。通过理论分析和仿真实验，验证了算法在提高系统容量和降低干扰方面的优势。', '李明'),
-('智能制造系统中的工业机器人路径规划算法', '刘强', '机械与车辆学院', 'published', '2023-09-25', '工业机器人,路径规划,智能制造,优化算法', '本文研究了智能制造环境下工业机器人的路径规划问题，提出了一种基于改进粒子群算法的路径优化方法。实验结果表明，该方法能有效提高机器人作业效率。', '张华'),
-('区块链技术在供应链管理中的应用研究', '陈磊', '管理与经济学院', 'published', '2023-08-30', '区块链,供应链管理,信任机制,智能合约', '探讨了区块链技术在供应链管理中的应用前景，设计了基于智能合约的供应链管理系统。通过案例分析，验证了区块链技术在提高供应链透明度和安全性方面的作用。', '黄院长'),
-('新型复合材料的制备与性能表征', '王丽', '材料学院', 'published', '2023-07-18', '复合材料,材料制备,性能表征,纳米材料', '本文研究了一种新型碳纤维增强复合材料的制备工艺，通过多种表征手段分析了材料的力学性能和微观结构。研究为高性能复合材料的设计提供了理论依据。', '赵主任'),
-('航空发动机故障诊断智能算法研究', '周杰', '宇航学院', 'published', '2023-06-12', '航空发动机,故障诊断,机器学习,信号处理', '针对航空发动机故障诊断问题，提出了一种基于深度学习的智能诊断算法。通过真实飞行数据验证，该算法在故障识别准确率和实时性方面表现优异。', '吴研究员'),
-('绿色化学工艺在精细化工中的应用', '孙莉', '化学与化工学院', 'published', '2023-05-08', '绿色化学,精细化工,催化反应,环境友好', '研究了绿色化学工艺在精细化工生产中的应用，开发了几种环境友好的催化反应体系。实验证明这些工艺在减少环境污染的同时保持了良好的经济效益。', '孙博士'),
-('激光加工技术在微电子制造中的应用', '马超', '光电学院', 'published', '2023-04-15', '激光加工,微电子制造,精密加工,激光器', '本文探讨了超短脉冲激光在微电子器件制造中的应用，优化了激光加工参数，实现了高精度微结构的制备。研究成果为微电子制造技术的发展提供了新的思路。', '郑教授'),
-('基于人工智能的医疗影像诊断系统', '赵敏', '计算机学院', 'under_review', '2023-12-01', '医疗影像,人工智能,深度学习,图像识别', '开发了一套基于深度学习的医疗影像自动诊断系统，能够准确识别多种疾病特征。临床试验表明，系统的诊断准确率达到了专业医师水平。', '王博'),
-('量子通信网络安全协议研究', '钱伟', '信息与电子学院', 'under_review', '2023-11-28', '量子通信,网络安全,加密协议,量子密钥', '研究了量子通信网络中的安全协议设计问题，提出了一种新的量子密钥分发协议。理论分析和实验验证表明，该协议具有较高的安全性和实用性。', '陈副教授');
+('5G通信系统中的大规模MIMO技术优化', '李华', '信息与电子学院', 'published', '2023-10-20', '5G,大规模MIMO,信号处理,无线通信', ARRAY['5G', '大规模MIMO', '信号处理', '无线通信'], '针对5G通信系统中大规模MIMO技术的优化问题，本文提出了一种新的预编码算法。通过理论分析和仿真实验，验证了算法在提高系统容量和降低干扰方面的优势。', '李明', '硕士'),
+('智能制造系统中的工业机器人路径规划算法', '刘强', '机械与车辆学院', 'published', '2023-09-25', '工业机器人,路径规划,智能制造,优化算法', ARRAY['工业机器人', '路径规划', '智能制造', '优化算法'], '本文研究了智能制造环境下工业机器人的路径规划问题，提出了一种基于改进粒子群算法的路径优化方法。实验结果表明，该方法能有效提高机器人作业效率。', '张华', '硕士'),
+('区块链技术在供应链管理中的应用研究', '陈磊', '管理与经济学院', 'published', '2023-08-30', '区块链,供应链管理,信任机制,智能合约', ARRAY['区块链', '供应链管理', '信任机制', '智能合约'], '探讨了区块链技术在供应链管理中的应用前景，设计了基于智能合约的供应链管理系统。通过案例分析，验证了区块链技术在提高供应链透明度和安全性方面的作用。', '黄院长', '硕士'),
+('新型复合材料的制备与性能表征', '王丽', '材料学院', 'published', '2023-07-18', '复合材料,材料制备,性能表征,纳米材料', ARRAY['复合材料', '材料制备', '性能表征', '纳米材料'], '本文研究了一种新型碳纤维增强复合材料的制备工艺，通过多种表征手段分析了材料的力学性能和微观结构。研究为高性能复合材料的设计提供了理论依据。', '赵主任', '博士'),
+('航空发动机故障诊断智能算法研究', '周杰', '宇航学院', 'published', '2023-06-12', '航空发动机,故障诊断,机器学习,信号处理', ARRAY['航空发动机', '故障诊断', '机器学习', '信号处理'], '针对航空发动机故障诊断问题，提出了一种基于深度学习的智能诊断算法。通过真实飞行数据验证，该算法在故障识别准确率和实时性方面表现优异。', '吴研究员', '博士'),
+('绿色化学工艺在精细化工中的应用', '孙莉', '化学与化工学院', 'published', '2023-05-08', '绿色化学,精细化工,催化反应,环境友好', ARRAY['绿色化学', '精细化工', '催化反应', '环境友好'], '研究了绿色化学工艺在精细化工生产中的应用，开发了几种环境友好的催化反应体系。实验证明这些工艺在减少环境污染的同时保持了良好的经济效益。', '孙博士', '硕士'),
+('激光加工技术在微电子制造中的应用', '马超', '光电学院', 'published', '2023-04-15', '激光加工,微电子制造,精密加工,激光器', ARRAY['激光加工', '微电子制造', '精密加工', '激光器'], '本文探讨了超短脉冲激光在微电子器件制造中的应用，优化了激光加工参数，实现了高精度微结构的制备。研究成果为微电子制造技术的发展提供了新的思路。', '郑教授', '硕士'),
+('基于人工智能的医疗影像诊断系统', '赵敏', '计算机学院', 'under_review', '2023-12-01', '医疗影像,人工智能,深度学习,图像识别', ARRAY['医疗影像', '人工智能', '深度学习', '图像识别'], '开发了一套基于深度学习的医疗影像自动诊断系统，能够准确识别多种疾病特征。临床试验表明，系统的诊断准确率达到了专业医师水平。', '王博', '硕士'),
+('量子通信网络安全协议研究', '钱伟', '信息与电子学院', 'under_review', '2023-11-28', '量子通信,网络安全,加密协议,量子密钥', ARRAY['量子通信', '网络安全', '加密协议', '量子密钥'], '研究了量子通信网络中的安全协议设计问题，提出了一种新的量子密钥分发协议。理论分析和实验验证表明，该协议具有较高的安全性和实用性。', '陈副教授', '博士');
 
--- 创建索引以提高查询性能
-CREATE INDEX IF NOT EXISTS idx_scholars_department ON public.scholars(department);
-CREATE INDEX IF NOT EXISTS idx_scholars_research_areas ON public.scholars USING gin(research_areas);
-CREATE INDEX IF NOT EXISTS idx_papers_author ON public.papers(author);
-CREATE INDEX IF NOT EXISTS idx_papers_department ON public.papers(department);
-CREATE INDEX IF NOT EXISTS idx_papers_keywords ON public.papers(keywords);
-CREATE INDEX IF NOT EXISTS idx_subjects_code ON public.subjects(code);
-
--- 为表添加RLS（Row Level Security）策略
-ALTER TABLE public.scholars ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
-
--- 创建允许所有用户读取的策略
-CREATE POLICY "Allow read access for all users" ON public.scholars FOR SELECT USING (true);
-CREATE POLICY "Allow read access for all users" ON public.subjects FOR SELECT USING (true);
-
--- 授予匿名用户读取权限
-GRANT SELECT ON public.scholars TO anon;
-GRANT SELECT ON public.subjects TO anon;
-GRANT SELECT ON public.papers TO anon;
-
--- 授予认证用户全部权限
-GRANT ALL ON public.scholars TO authenticated;
-GRANT ALL ON public.subjects TO authenticated;
-GRANT ALL ON public.papers TO authenticated;
+-- 创建论文-学者关联关系示例
+INSERT INTO public.paper_authors (paper_id, scholar_id, author_name, is_corresponding_author, author_order)
+SELECT p.id, s.id, p.author, true, 1
+FROM public.papers p, public.scholars s
+WHERE p.supervisor = s.name
+LIMIT 10;
