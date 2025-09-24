@@ -1,0 +1,96 @@
+-- 创建学者表
+CREATE TABLE IF NOT EXISTS public.scholars (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    name varchar(100) NOT NULL,
+    title varchar(50) NOT NULL,
+    department varchar(100) NOT NULL,
+    research_areas text[] DEFAULT '{}',
+    paper_count integer DEFAULT 0,
+    citation_count integer DEFAULT 0,
+    h_index integer DEFAULT 0,
+    avatar_url text,
+    email varchar(255),
+    bio text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+-- 插入北京理工大学的测试学者数据
+INSERT INTO public.scholars (name, title, department, research_areas, paper_count, citation_count, h_index, avatar_url, email, bio) VALUES
+('王博', '教授', '计算机学院', ARRAY['人工智能', '机器学习', '深度学习'], 45, 1250, 18, '/diverse-professor-lecturing.png', 'wangbo@bit.edu.cn', '专注于人工智能和机器学习领域的研究，在深度学习算法优化方面有突出贡献。'),
+('李明', '副教授', '信息与电子学院', ARRAY['信号处理', '通信系统', '5G技术'], 32, 890, 15, '/diverse-professor-lecturing.png', 'liming@bit.edu.cn', '长期从事无线通信和信号处理技术研究，在5G通信系统优化方面有丰富经验。'),
+('张华', '教授', '机械与车辆学院', ARRAY['机器人技术', '自动控制', '智能制造'], 58, 1680, 22, '/diverse-professor-lecturing.png', 'zhanghua@bit.edu.cn', '机器人技术和智能制造领域的知名专家，主持多项国家重点研发项目。'),
+('刘教授', '教授', '计算机学院', ARRAY['数据库系统', '大数据', '云计算'], 67, 2100, 25, '/diverse-professor-lecturing.png', 'liuprof@bit.edu.cn', '数据库系统和大数据处理领域的权威专家，发表高质量论文60余篇。'),
+('陈副教授', '副教授', '信息与电子学院', ARRAY['网络安全', '密码学', '区块链'], 29, 650, 12, '/diverse-professor-lecturing.png', 'chenvp@bit.edu.cn', '网络安全和密码学专家，在区块链技术应用方面有深入研究。'),
+('赵主任', '教授', '材料学院', ARRAY['新材料', '纳米技术', '复合材料'], 73, 2800, 28, '/diverse-professor-lecturing.png', 'zhaodir@bit.edu.cn', '材料科学与工程领域的领军人物，在纳米材料制备技术方面有重大突破。'),
+('吴研究员', '研究员', '宇航学院', ARRAY['航空航天', '推进技术', '空气动力学'], 41, 1420, 19, '/diverse-professor-lecturing.png', 'wures@bit.edu.cn', '航空航天领域专家，参与多个国防重点项目，在推进技术方面有重要贡献。'),
+('孙博士', '副教授', '化学与化工学院', ARRAY['化学工程', '催化技术', '绿色化学'], 26, 580, 11, '/diverse-professor-lecturing.png', 'sundr@bit.edu.cn', '化学工程专家，专注于绿色化学和催化技术研究。'),
+('黄院长', '教授', '管理与经济学院', ARRAY['管理科学', '运筹学', '决策分析'], 89, 3200, 32, '/diverse-professor-lecturing.png', 'huangdean@bit.edu.cn', '管理科学领域的杰出学者，在企业运营管理和决策优化方面有深厚造诣。'),
+('郑教授', '教授', '光电学院', ARRAY['光学工程', '激光技术', '光电器件'], 52, 1890, 21, '/diverse-professor-lecturing.png', 'zhengprof@bit.edu.cn', '光学工程专家，在激光技术和光电器件设计方面有重要贡献。');
+
+-- 创建学科分类表
+CREATE TABLE IF NOT EXISTS public.subjects (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    code varchar(10) NOT NULL UNIQUE,
+    name varchar(100) NOT NULL,
+    description text,
+    paper_count integer DEFAULT 0,
+    parent_id uuid REFERENCES public.subjects(id),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+-- 插入学科分类数据
+INSERT INTO public.subjects (code, name, description, paper_count) VALUES
+('01', '哲学', '哲学学科门类，包括马克思主义哲学、中国哲学、外国哲学等', 152),
+('02', '经济学', '经济学学科门类，包括理论经济学、应用经济学等', 1450),
+('03', '法学', '法学学科门类，包括法学理论、宪法学与行政法学等', 2428),
+('04', '教育学', '教育学学科门类，包括教育学原理、课程与教学论等', 1150),
+('05', '文学', '文学学科门类，包括中国语言文学、外国语言文学等', 1891),
+('06', '历史学', '历史学学科门类，包括考古学、中国史、世界史等', 5),
+('07', '理学', '理学学科门类，包括数学、物理学、化学等', 4652),
+('08', '工学', '工学学科门类，包括力学、机械工程、信息与通信工程等', 47927),
+('09', '农学', '农学学科门类，包括作物学、园艺学、农业资源与环境等', 0),
+('10', '医学', '医学学科门类，包括基础医学、临床医学、公共卫生与预防医学等', 93),
+('11', '军事学', '军事学学科门类，包括军事思想及军事历史、战略学等', 1),
+('12', '管理学', '管理学学科门类，包括管理科学与工程、工商管理等', 14799),
+('13', '艺术学', '艺术学学科门类，包括艺术学理论、音乐与舞蹈学等', 1350),
+('14', '交叉学科', '交叉学科门类，包括集成电路科学与工程等', 0);
+
+-- 为papers表添加更多测试数据
+INSERT INTO public.papers (title, author, department, status, submission_date, keywords, abstract, supervisor) VALUES
+('基于深度学习的自然语言处理技术研究', '张明', '计算机学院', 'published', '2023-11-15', 'BERT,自然语言处理,深度学习,机器翻译', '本文研究了基于深度学习的自然语言处理技术，提出了一种改进的BERT模型。通过在多个NLP任务上的实验验证，证明了所提方法的有效性。研究成果对推动自然语言处理技术的发展具有重要意义。', '王博'),
+('5G通信系统中的大规模MIMO技术优化', '李华', '信息与电子学院', 'published', '2023-10-20', '5G,大规模MIMO,信号处理,无线通信', '针对5G通信系统中大规模MIMO技术的优化问题，本文提出了一种新的预编码算法。通过理论分析和仿真实验，验证了算法在提高系统容量和降低干扰方面的优势。', '李明'),
+('智能制造系统中的工业机器人路径规划算法', '刘强', '机械与车辆学院', 'published', '2023-09-25', '工业机器人,路径规划,智能制造,优化算法', '本文研究了智能制造环境下工业机器人的路径规划问题，提出了一种基于改进粒子群算法的路径优化方法。实验结果表明，该方法能有效提高机器人作业效率。', '张华'),
+('区块链技术在供应链管理中的应用研究', '陈磊', '管理与经济学院', 'published', '2023-08-30', '区块链,供应链管理,信任机制,智能合约', '探讨了区块链技术在供应链管理中的应用前景，设计了基于智能合约的供应链管理系统。通过案例分析，验证了区块链技术在提高供应链透明度和安全性方面的作用。', '黄院长'),
+('新型复合材料的制备与性能表征', '王丽', '材料学院', 'published', '2023-07-18', '复合材料,材料制备,性能表征,纳米材料', '本文研究了一种新型碳纤维增强复合材料的制备工艺，通过多种表征手段分析了材料的力学性能和微观结构。研究为高性能复合材料的设计提供了理论依据。', '赵主任'),
+('航空发动机故障诊断智能算法研究', '周杰', '宇航学院', 'published', '2023-06-12', '航空发动机,故障诊断,机器学习,信号处理', '针对航空发动机故障诊断问题，提出了一种基于深度学习的智能诊断算法。通过真实飞行数据验证，该算法在故障识别准确率和实时性方面表现优异。', '吴研究员'),
+('绿色化学工艺在精细化工中的应用', '孙莉', '化学与化工学院', 'published', '2023-05-08', '绿色化学,精细化工,催化反应,环境友好', '研究了绿色化学工艺在精细化工生产中的应用，开发了几种环境友好的催化反应体系。实验证明这些工艺在减少环境污染的同时保持了良好的经济效益。', '孙博士'),
+('激光加工技术在微电子制造中的应用', '马超', '光电学院', 'published', '2023-04-15', '激光加工,微电子制造,精密加工,激光器', '本文探讨了超短脉冲激光在微电子器件制造中的应用，优化了激光加工参数，实现了高精度微结构的制备。研究成果为微电子制造技术的发展提供了新的思路。', '郑教授'),
+('基于人工智能的医疗影像诊断系统', '赵敏', '计算机学院', 'under_review', '2023-12-01', '医疗影像,人工智能,深度学习,图像识别', '开发了一套基于深度学习的医疗影像自动诊断系统，能够准确识别多种疾病特征。临床试验表明，系统的诊断准确率达到了专业医师水平。', '王博'),
+('量子通信网络安全协议研究', '钱伟', '信息与电子学院', 'under_review', '2023-11-28', '量子通信,网络安全,加密协议,量子密钥', '研究了量子通信网络中的安全协议设计问题，提出了一种新的量子密钥分发协议。理论分析和实验验证表明，该协议具有较高的安全性和实用性。', '陈副教授');
+
+-- 创建索引以提高查询性能
+CREATE INDEX IF NOT EXISTS idx_scholars_department ON public.scholars(department);
+CREATE INDEX IF NOT EXISTS idx_scholars_research_areas ON public.scholars USING gin(research_areas);
+CREATE INDEX IF NOT EXISTS idx_papers_author ON public.papers(author);
+CREATE INDEX IF NOT EXISTS idx_papers_department ON public.papers(department);
+CREATE INDEX IF NOT EXISTS idx_papers_keywords ON public.papers(keywords);
+CREATE INDEX IF NOT EXISTS idx_subjects_code ON public.subjects(code);
+
+-- 为表添加RLS（Row Level Security）策略
+ALTER TABLE public.scholars ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
+
+-- 创建允许所有用户读取的策略
+CREATE POLICY "Allow read access for all users" ON public.scholars FOR SELECT USING (true);
+CREATE POLICY "Allow read access for all users" ON public.subjects FOR SELECT USING (true);
+
+-- 授予匿名用户读取权限
+GRANT SELECT ON public.scholars TO anon;
+GRANT SELECT ON public.subjects TO anon;
+GRANT SELECT ON public.papers TO anon;
+
+-- 授予认证用户全部权限
+GRANT ALL ON public.scholars TO authenticated;
+GRANT ALL ON public.subjects TO authenticated;
+GRANT ALL ON public.papers TO authenticated;

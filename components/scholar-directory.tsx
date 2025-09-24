@@ -5,8 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Search, User, BookOpen, Award, TrendingUp } from "lucide-react"
 import Link from "next/link"
+import { useState, useMemo } from "react"
 
 export function ScholarDirectory() {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedDepartment, setSelectedDepartment] = useState("all")
   const scholars = [
     {
       id: "1",
@@ -44,7 +47,61 @@ export function ScholarDirectory() {
       avatar: "/diverse-professor-lecturing.png",
       recentPapers: ["工业机器人控制系统设计与实现", "智能制造系统中的自动化技术"],
     },
+    {
+      id: "4",
+      name: "刘教授",
+      title: "教授",
+      department: "计算机学院",
+      researchAreas: ["数据库系统", "大数据", "云计算"],
+      paperCount: 67,
+      citationCount: 2100,
+      hIndex: 25,
+      avatar: "/diverse-professor-lecturing.png",
+      recentPapers: ["分布式数据库系统设计", "云计算环境下的数据处理"],
+    },
+    {
+      id: "5",
+      name: "陈副教授",
+      title: "副教授",
+      department: "信息与电子学院",
+      researchAreas: ["网络安全", "密码学", "区块链"],
+      paperCount: 29,
+      citationCount: 650,
+      hIndex: 12,
+      avatar: "/diverse-professor-lecturing.png",
+      recentPapers: ["区块链技术在网络安全中的应用", "现代密码学算法研究"],
+    },
   ]
+
+  // 搜索和筛选逻辑
+  const filteredScholars = useMemo(() => {
+    return scholars.filter(scholar => {
+      const matchesSearch = !searchQuery || 
+        scholar.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        scholar.researchAreas.some(area => 
+          area.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      
+      const matchesDepartment = selectedDepartment === "all" || 
+        scholar.department === getDepartmentName(selectedDepartment)
+      
+      return matchesSearch && matchesDepartment
+    })
+  }, [searchQuery, selectedDepartment])
+
+  const getDepartmentName = (value: string) => {
+    switch (value) {
+      case "cs": return "计算机学院"
+      case "ee": return "信息与电子学院"
+      case "me": return "机械与车辆学院"
+      default: return ""
+    }
+  }
+
+  const handleSearch = () => {
+    // 搜索功能已经通过useMemo实现实时搜索
+    console.log("执行搜索:", { searchQuery, selectedDepartment })
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -58,9 +115,14 @@ export function ScholarDirectory() {
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="md:col-span-2">
-              <Input placeholder="搜索学者姓名或研究领域..." className="w-full" />
+              <Input 
+                placeholder="搜索学者姓名或研究领域..." 
+                className="w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            <Select>
+            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
               <SelectTrigger>
                 <SelectValue placeholder="选择院系" />
               </SelectTrigger>
@@ -71,7 +133,10 @@ export function ScholarDirectory() {
                 <SelectItem value="me">机械与车辆学院</SelectItem>
               </SelectContent>
             </Select>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={handleSearch}
+            >
               <Search className="w-4 h-4 mr-2" />
               搜索
             </Button>
@@ -113,7 +178,14 @@ export function ScholarDirectory() {
 
       {/* 学者列表 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {scholars.map((scholar) => (
+        {filteredScholars.length === 0 ? (
+          <div className="col-span-full text-center py-12">
+            <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">没有找到匹配的学者</h3>
+            <p className="text-gray-600">请尝试调整搜索条件或筛选选项</p>
+          </div>
+        ) : (
+          filteredScholars.map((scholar) => (
           <Card key={scholar.id} className="hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-start space-x-4">
@@ -176,7 +248,7 @@ export function ScholarDirectory() {
               </div>
             </CardContent>
           </Card>
-        ))}
+        )))}
       </div>
 
       <div className="text-center mt-8">

@@ -4,6 +4,16 @@ import { FileText, TrendingUp, Download, Users } from "lucide-react"
 import Link from "next/link"
 
 export function MainContent() {
+  // 处理文件下载
+  const handleDownload = (fileName: string) => {
+    // 创建模拟下载链接
+    const link = document.createElement('a')
+    link.href = `/api/download?file=${encodeURIComponent(fileName)}`
+    link.download = fileName
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -90,7 +100,12 @@ export function MainContent() {
                 <span className="text-sm font-semibold text-orange-600 bg-orange-200 px-2 py-1 rounded">1</span>
                 <span className="text-sm text-gray-700">内部论文说明单</span>
               </div>
-              <Button size="sm" variant="outline" className="text-orange-600 border-orange-600 bg-transparent">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="text-orange-600 border-orange-600 bg-transparent"
+                onClick={() => handleDownload('内部论文说明单.pdf')}
+              >
                 下载
               </Button>
             </div>
@@ -99,7 +114,11 @@ export function MainContent() {
                 <span className="text-sm font-semibold text-gray-600 bg-gray-200 px-2 py-1 rounded">2</span>
                 <span className="text-sm text-gray-700">电子论文数据申请</span>
               </div>
-              <Button size="sm" variant="outline">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => handleDownload('电子论文数据申请表.pdf')}
+              >
                 下载
               </Button>
             </div>
@@ -108,7 +127,11 @@ export function MainContent() {
                 <span className="text-sm font-semibold text-gray-600 bg-gray-200 px-2 py-1 rounded">3</span>
                 <span className="text-sm text-gray-700">博士学位论文模板</span>
               </div>
-              <Button size="sm" variant="outline">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => handleDownload('博士学位论文模板.docx')}
+              >
                 下载
               </Button>
             </div>
@@ -117,7 +140,11 @@ export function MainContent() {
                 <span className="text-sm font-semibold text-gray-600 bg-gray-200 px-2 py-1 rounded">4</span>
                 <span className="text-sm text-gray-700">硕士学位论文模板</span>
               </div>
-              <Button size="sm" variant="outline">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => handleDownload('硕士学位论文模板.docx')}
+              >
                 下载
               </Button>
             </div>
@@ -129,10 +156,12 @@ export function MainContent() {
       <div className="mt-12 bg-blue-600 rounded-lg p-8 text-center">
         <h3 className="text-2xl font-bold text-white mb-4">统一认证</h3>
         <p className="text-blue-100 mb-6">论文提交请从此处</p>
-        <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 font-semibold px-8">
-          <Users className="w-5 h-5 mr-2" />
-          统一认证登录
-        </Button>
+        <Link href="/login">
+          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 font-semibold px-8">
+            <Users className="w-5 h-5 mr-2" />
+            统一认证登录
+          </Button>
+        </Link>
       </div>
     </main>
   )

@@ -9,6 +9,47 @@ interface PaperDetailProps {
 }
 
 export function PaperDetail({ paperId }: PaperDetailProps) {
+  // 处理文件下载
+  const handleDownload = () => {
+    const link = document.createElement('a')
+    link.href = `/api/download?file=${encodeURIComponent(paper.title + '.pdf')}`
+    link.download = paper.title + '.pdf'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  // 处理在线预览
+  const handlePreview = () => {
+    // 模拟PDF预览URL
+    const previewUrl = `/api/preview?file=${encodeURIComponent(paper.title + '.pdf')}`
+    window.open(previewUrl, '_blank', 'width=1000,height=800')
+  }
+
+  // 处理分享功能
+  const handleShare = async () => {
+    const shareData = {
+      title: paper.title,
+      text: `查看论文: ${paper.title}`,
+      url: window.location.href,
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        // 备用方案：复制到剪贴板
+        await navigator.clipboard.writeText(window.location.href)
+        alert('链接已复制到剪贴板！')
+      }
+    } catch (error) {
+      console.error('分享失败:', error)
+      // 备用方案：复制到剪贴板
+      await navigator.clipboard.writeText(window.location.href)
+      alert('链接已复制到剪贴板！')
+    }
+  }
+
   // Mock data - in real app would fetch based on paperId
   const paper = {
     id: paperId,
@@ -126,15 +167,24 @@ export function PaperDetail({ paperId }: PaperDetailProps) {
             </div>
 
             <div className="flex flex-col space-y-3 ml-8">
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={handleDownload}
+              >
                 <Download className="w-4 h-4 mr-2" />
                 下载全文
               </Button>
-              <Button variant="outline">
+              <Button 
+                variant="outline"
+                onClick={handlePreview}
+              >
                 <Eye className="w-4 h-4 mr-2" />
                 在线预览
               </Button>
-              <Button variant="outline">
+              <Button 
+                variant="outline"
+                onClick={handleShare}
+              >
                 <Share2 className="w-4 h-4 mr-2" />
                 分享
               </Button>

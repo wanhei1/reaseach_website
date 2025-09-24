@@ -3,8 +3,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Download } from "lucide-react"
+import { useState, useMemo } from "react"
 
 export function SubjectNavigation() {
+  const [selectedSubject, setSelectedSubject] = useState("")
+  const [titleQuery, setTitleQuery] = useState("")
+  const [keywordQuery, setKeywordQuery] = useState("")
+  const [sortBy, setSortBy] = useState("date")
   const subjects = [
     { code: "01", name: "哲学", count: 152 },
     { code: "02", name: "经济学", count: 1450 },
@@ -30,12 +35,79 @@ export function SubjectNavigation() {
       author: "周迈",
       studentId: "3820192061",
       supervisor: "夏元清",
-      keywords:
-        "情感计算, 情感检测, 机器言语检测, 低资源语言, 多语言自然语言处理, Affective Computing, Emotion Detection, Hate Speech Detection, Low-Resource Language",
+      keywords: "情感计算, 情感检测, 机器言语检测, 低资源语言, 多语言自然语言处理",
       level: "博士",
       year: "2023",
+      subject: "08", // 工学
+    },
+    {
+      id: 2,
+      title: "基于深度学习的图像识别算法研究",
+      englishTitle: "Research on Image Recognition Algorithms Based on Deep Learning",
+      author: "张三",
+      studentId: "2021001",
+      supervisor: "王教授",
+      keywords: "深度学习, 图像识别, 卷积神经网络, 计算机视觉",
+      level: "硕士",
+      year: "2023",
+      subject: "08", // 工学
+    },
+    {
+      id: 3,
+      title: "企业管理模式创新研究",
+      englishTitle: "Research on Innovation in Enterprise Management Models",
+      author: "李四",
+      studentId: "2022001",
+      supervisor: "刘教授",
+      keywords: "企业管理, 管理创新, 组织变革, 战略管理",
+      level: "硕士",  
+      year: "2023",
+      subject: "12", // 管理学
     },
   ]
+
+  // 筛选逻辑
+  const filteredPapers = useMemo(() => {
+    return papers.filter(paper => {
+      const matchesSubject = !selectedSubject || paper.subject === selectedSubject
+      const matchesTitle = !titleQuery || 
+        paper.title.toLowerCase().includes(titleQuery.toLowerCase()) ||
+        paper.englishTitle.toLowerCase().includes(titleQuery.toLowerCase())
+      const matchesKeywords = !keywordQuery || 
+        paper.keywords.toLowerCase().includes(keywordQuery.toLowerCase())
+      
+      return matchesSubject && matchesTitle && matchesKeywords
+    }).sort((a, b) => {
+      switch (sortBy) {
+        case "date":
+          return b.year.localeCompare(a.year)
+        case "relevance":
+          return a.title.localeCompare(b.title)
+        case "downloads":
+          return Math.random() - 0.5 // 模拟排序
+        default:
+          return 0
+      }
+    })
+  }, [selectedSubject, titleQuery, keywordQuery, sortBy])
+
+  const handleSubjectClick = (subjectCode: string) => {
+    setSelectedSubject(subjectCode === selectedSubject ? "" : subjectCode)
+  }
+
+  const handleSearch = () => {
+    console.log("执行搜索:", { 
+      selectedSubject, 
+      titleQuery, 
+      keywordQuery, 
+      sortBy 
+    })
+  }
+
+  const getSubjectName = (code: string) => {
+    const subject = subjects.find(s => s.code === code)
+    return subject ? subject.name : ""
+  }
 
   return (
     <div className="bg-gradient-to-r from-blue-500 to-blue-600 py-8">
@@ -56,7 +128,10 @@ export function SubjectNavigation() {
                 {subjects.map((subject) => (
                   <div
                     key={subject.code}
-                    className="flex items-center justify-between p-2 hover:bg-blue-500 rounded cursor-pointer"
+                    className={`flex items-center justify-between p-2 hover:bg-blue-500 rounded cursor-pointer ${
+                      selectedSubject === subject.code ? 'bg-blue-500' : ''
+                    }`}
+                    onClick={() => handleSubjectClick(subject.code)}
                   >
                     <span className="text-sm">
                       {subject.code}-{subject.name}
@@ -75,18 +150,26 @@ export function SubjectNavigation() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">题名</label>
-                    <Input placeholder="请输入检索内容" />
+                    <Input 
+                      placeholder="请输入检索内容" 
+                      value={titleQuery}
+                      onChange={(e) => setTitleQuery(e.target.value)}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">关键词</label>
-                    <Input placeholder="请输入检索内容" />
+                    <Input 
+                      placeholder="请输入检索内容"
+                      value={keywordQuery}
+                      onChange={(e) => setKeywordQuery(e.target.value)}
+                    />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">检索结果排序</label>
-                    <Select defaultValue="date">
+                    <Select value={sortBy} onValueChange={setSortBy}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -98,7 +181,10 @@ export function SubjectNavigation() {
                     </Select>
                   </div>
                   <div className="flex items-end">
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                    <Button 
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      onClick={handleSearch}
+                    >
                       <Search className="w-4 h-4 mr-2" />
                       开始检索
                     </Button>
@@ -111,7 +197,10 @@ export function SubjectNavigation() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
                     <input type="checkbox" className="rounded" />
-                    <span className="text-sm text-gray-600">已为您找到 75931 条相关论文</span>
+                    <span className="text-sm text-gray-600">
+                      已为您找到 {filteredPapers.length} 条相关论文
+                      {selectedSubject && ` (${getSubjectName(selectedSubject)})`}
+                    </span>
                   </div>
                   <Button variant="outline" size="sm">
                     <Download className="w-4 h-4 mr-2" />
@@ -119,7 +208,14 @@ export function SubjectNavigation() {
                   </Button>
                 </div>
 
-                {papers.map((paper) => (
+                {filteredPapers.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">没有找到匹配的论文</h3>
+                    <p className="text-gray-600">请尝试调整搜索条件或学科分类</p>
+                  </div>
+                ) : (
+                  filteredPapers.map((paper) => (
                   <Card key={paper.id} className="mb-4">
                     <CardContent className="p-6">
                       <div className="flex items-start space-x-4">
@@ -157,11 +253,13 @@ export function SubjectNavigation() {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                )))}
 
-                <div className="text-center mt-6">
-                  <Button variant="outline">加载更多结果</Button>
-                </div>
+                {filteredPapers.length > 0 && (
+                  <div className="text-center mt-6">
+                    <Button variant="outline">加载更多结果</Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
