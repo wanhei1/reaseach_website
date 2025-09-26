@@ -1,0 +1,21 @@
+{
+  "name": "北京理工大学学术研究平台",
+  "short_name": "BIT Research",
+  "description": "Beijing Institute of Technology Academic Research Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1E293B",
+  "theme_color": "#3B82F6",
+  "icons": [
+    {
+      "src": "/placeholder-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/placeholder-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

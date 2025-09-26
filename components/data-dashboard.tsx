@@ -213,7 +213,7 @@ export function DataDashboard() {
                       outerRadius={100}
                       fill="#8884d8"
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={(props: any) => `${props.name} ${((props.percent || 0) * 100).toFixed(0)}%`}
                     >
                       {papersByDepartment.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />

@@ -33,6 +33,25 @@ execute-scripts.js
 verify-database.js
 SUPABASE_EXECUTION_GUIDE.md
 
+# demo files and UI examples
+ui-demos/
+research-website-core.zip
+research-website-full.zip
+research-website.rar
+research-website/
+
+# backup and old files
+app/globals-old.css
+app/globals.css.backup
+app/page-broken.tsx
+app/page-old.tsx
+
+# build scripts
+pack-core.ps1
+
+# documentation in Chinese
+运行指南.md
+
 # lock files (exclude other package managers, keep bun.lock)
 package-lock.json
 yarn.lock
